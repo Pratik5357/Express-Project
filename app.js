@@ -108,7 +108,7 @@ app.use("/",usersRouter);
 // });
 
 app.all("*",(req,res,next)=>{
-    next(new ExpressError(401,"Page Not Found!"));
+    res.redirect("/listings");
 });
 
 app.use((err,req,res,next)=>{
