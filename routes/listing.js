@@ -16,6 +16,7 @@ router.route("/").get(wrapAsync(listingController.Index))
 
 //new routes
 router.get("/new",isLoggedIn, listingController.createListingForm);
+router.get("/search", wrapAsync(listingController.searchListing));  
 
 router.route("/:id").get(wrapAsync(listingController.showListing))
 /*update route*/    .put(isLoggedIn, isOwner, upload.single('listing[image]'), validateListing, wrapAsync(listingController.updateListing))
@@ -23,7 +24,6 @@ router.route("/:id").get(wrapAsync(listingController.showListing))
 //Edit route
 router.get("/:id/edit",isLoggedIn,isOwner,validateListing,wrapAsync(listingController.editListing));
  
-
 
 
 module.exports = router;
