@@ -1,72 +1,104 @@
-
 <% layout("/layouts/boilerplate") %>
-  <body>
-    <div class="row mt-3">
-      <div class="col-8 offset-2">
-        <h3>Create a New Listing</h3>
-        <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
-          <div class="mb-3">
-            <label for="title" class="form-lable" >Title</label>
-            <input name="listing[title]" placeholder="enter title" type="text" class="form-control" required />
+<body>
+  <div class="row mt-3">
+    <div class="col-8 offset-2">
+      <h3>Create a New Listing</h3>
+      <form method="POST" action="/listings" novalidate class="needs-validation" enctype="multipart/form-data">
+        
+        <!-- Title -->
+        <div class="mb-3">
+          <label for="title" class="form-label">Title</label>
+          <input name="listing[title]" placeholder="Enter title" type="text" class="form-control" required />
+          <div class="invalid-feedback">Required</div>
+        </div>
+        
+        <!-- Description -->
+        <div class="mb-3">
+          <label for="description" class="form-label">Description</label>
+          <textarea name="listing[description]" placeholder="Enter description" class="form-control" required></textarea>
+          <div class="invalid-feedback">Required</div>
+        </div>
+        
+        <!-- Image Upload -->
+        <div class="mb-3">
+          <label for="image" class="form-label">Upload Image</label>
+          <input name="listing[image]" type="file" class="form-control"/>
+        </div>
+
+        <!-- Price & Country -->
+        <div class="row">
+          <div class="mb-3 col-md-4">
+            <label for="price" class="form-label">Price</label>
+            <input name="listing[price]" placeholder="Enter price" type="number" class="form-control" required/>
             <div class="invalid-feedback">Required</div>
           </div>
-          
-          <div class="mb-3">
-            <label for="description" class="form-lable" >Description</label>
-            <textarea
-            name="listing[description]"
-            placeholder="enter description"
-            class="form-control"
-            required
-          ></textarea>
+          <div class="mb-3 col-md-8">
+            <label for="country" class="form-label">Country</label>
+            <input name="listing[country]" placeholder="Enter country" type="text" class="form-control" required />
+            <div class="invalid-feedback">Required</div>
+          </div>
+        </div>
+        
+        <!-- Location -->
+        <div class="mb-3">
+          <label for="location" class="form-label">Location</label>
+          <input id="locationInput" name="listing[location]" placeholder="Enter location" type="text" class="form-control" required/>
           <div class="invalid-feedback">Required</div>
-          </div>
-          
-          <!-- <div class="mb-3">
-            <label for="image" class="form-lable" >Image Link</label>
-            <input
-            name="listing[image]"
-            placeholder="enter image URL/Link"
-            type="text"
-            class="form-control"
-          />
-          </div> -->
-          <div class="mb-3">
-            <label for="image" class="form-lable" >Upload Image</label>
-            <input
-            name="listing[image]"
-            type="file"
-            class="form-control"
-          />
-          </div>
+        </div>
 
-          <div class="row">
-            <div class="mb-3 col-md-4">
-              <label for="price" class="form-lable" >Price</label>
-              <input name="listing[price]" placeholder="enter price" type="number" class="form-control" required/>
-              <div class="invalid-feedback">Required</div>
-            </div>
-            <div class="mb-3 col-md-8">
-              <label for="country" class="form-lable" >Country</label>
-              <input name="listing[country]" placeholder="enter country" type="text" class="form-control" required />
-              <div class="invalid-feedback">Required</div>
-            </div>
-          </div>
-          
-          <div class="mb-3">
-            <label for="location" class="form-lable" >Location</label>
-            <input
-            name="listing[location]"
-            placeholder="enter location"
-            type="text"
-            class="form-control"
-            required
-          />
-          <div class="invalid-feedback">Required</div>
-          </div>
-          <button class="btn btn-dark add-btn mt-2 mb-3">Add</button>
-          
-        </form>
-      </div>
+        <!-- Hidden fields for coordinates -->
+        <input type="hidden" name="listing[lat]" id="lat">
+        <input type="hidden" name="listing[lng]" id="lng">
+
+        <!-- Map -->
+        <div class="mb-3">
+          <div id="map" style="height: 300px; width: 100%; border-radius: 8px;"></div>
+        </div>
+
+        <button class="btn btn-dark add-btn mt-2 mb-3">Add</button>
+        
+      </form>
     </div>
-  </body>
+  </div>
+
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+  <script>
+    // Initialize map
+    const map = L.map('map').setView([19.0760, 72.8777], 10); // Default Mumbai
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let marker = L.marker([19.0760, 72.8777]).addTo(map);
+
+    // Update map and hidden inputs based on address
+    function updateMap(address) {
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            map.setView([lat, lon], 14);
+            marker.setLatLng([lat, lon]).bindPopup(address).openPopup();
+
+            // Update hidden inputs
+            document.getElementById('lat').value = lat;
+            document.getElementById('lng').value = lon;
+          }
+        })
+        .catch(error => console.error('Error fetching location:', error));
+    }
+
+    // When user leaves location input, update map
+    document.getElementById('locationInput').addEventListener('blur', (e) => {
+      const address = e.target.value.trim();
+      if (address) {
+        updateMap(address);
+      }
+    });
+  </script>
+</body>
